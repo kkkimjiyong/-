@@ -262,6 +262,7 @@ const Contatiner = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
+  overflow: scroll;
   top: 0;
   width: 100%;
   max-width: 375px;
@@ -283,7 +284,9 @@ const Contatiner = styled.div`
   }
 `;
 
-const CaptureBtn = styled.a``;
+const CaptureBtn = styled.a`
+  margin-top: 10px;
+`;
 
 const CaptureSection = styled.div`
   position: fixed;
@@ -308,9 +311,8 @@ const Button = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
-  position: absolute;
+  margin-top: 40px;
   width: 50%;
-  bottom: 100px;
   height: 50px;
   border-radius: 10px;
   background-color: white;
@@ -326,8 +328,8 @@ const Button = styled.div`
 `;
 
 const ColorBox = styled.div`
-  position: absolute;
-  bottom: 50px;
+  margin-top: 30px;
+  margin-bottom: 50px;
   display: flex;
 `;
 
