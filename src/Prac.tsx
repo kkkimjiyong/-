@@ -4,6 +4,7 @@ import styled from "styled-components";
 import { supabase } from "./lib/api";
 import eraser from "./assets/eraser.png";
 import sketchframe1 from "./assets/sketchframe1.png";
+import html2canvas from "html2canvas";
 
 export const Prac = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -57,8 +58,6 @@ export const Prac = () => {
     canvasCtx?.moveTo(mouseX, mouseY);
   };
   //마우스 움직이면
-  //터치포함시키기
-  let touchList = [];
   const MouseMoving = (e: any) => {
     const x = e.nativeEvent.offsetX;
     const y = e.nativeEvent.offsetY;
@@ -66,7 +65,6 @@ export const Prac = () => {
     if (!isPainting) {
       return;
     }
-    console.log(e.changedTouches);
 
     if (erase) {
       canvasCtx?.clearRect(x - 25, y - 25, 50, 50);
@@ -75,9 +73,36 @@ export const Prac = () => {
       canvasCtx?.stroke();
     }
   };
+  //? --------------------------------------- 터치  --------------------------------
 
-  // }, []);
+  const TouchStart = (e: any) => {
+    let touches = e.changedTouches;
+    setIsPainting(true);
+    canvasCtx?.beginPath();
+    canvasCtx?.moveTo(touches[0].pageX, touches[0].pageY - 260);
+  };
 
+  const TouchMove = (e: any) => {
+    let touches = e.changedTouches;
+    if (erase) {
+      canvasCtx?.clearRect(
+        touches[0].pageX - 25,
+        touches[0].pageY - 260 - 25,
+        50,
+        50
+      );
+    } else {
+      canvasCtx?.lineTo(touches[0].pageX, touches[0].pageY - 260);
+      canvasCtx?.stroke();
+    }
+
+    if (!isPainting) {
+      return;
+    }
+    console.log(touches[0].pageX, touches[0].pageY);
+  };
+
+  //! ===========================   데이터 불러오기 및 캔버스생성  ================================
   useEffect(() => {
     getImg();
   }, []);
@@ -131,16 +156,49 @@ export const Prac = () => {
     }
   }, [color]);
 
+  //! =======================  캡쳐   ============================
+
+  const linkRef = useRef<any>(null);
+  const captureRef = useRef<any>(null);
+
+  const [isCapture, setIsCapture] = useState<boolean>(true);
+  const onSaveAs = (uri: any, filename: any) => {
+    console.log("저장");
+    let link = linkRef.current;
+    if (link) {
+      link.href = uri;
+      link.download = filename;
+      link.click();
+    }
+  };
+  const onCapture = () => {
+    const capture: HTMLElement | null = captureRef.current;
+
+    if (capture !== null && isCapture) {
+      setTimeout(() => {
+        setIsCapture(false);
+      });
+      html2canvas(capture, {
+        useCORS: true,
+      }).then((capture) => {
+        onSaveAs(capture.toDataURL("image/png"), "image-download.png");
+      });
+    }
+  };
+
   return (
     <Wrapper>
-      <Contatiner>
+      {" "}
+      <Contatiner ref={captureRef}>
+        <Title>Are you 피까소?</Title>
         {/* <img className="frameimg" src={sketchframe1} alt="스케치북" /> */}
+
         <canvas className="frame" ref={frameRef}></canvas>
         <canvas
           className="canvas"
           ref={canvasRef}
-          onTouchStart={StartPainting}
-          onTouchMove={MouseMoving}
+          onTouchStart={TouchStart}
+          onTouchMove={TouchMove}
           onTouchEnd={StopPainting}
           onTouchCancel={StopPainting}
           onMouseMove={MouseMoving}
@@ -148,16 +206,43 @@ export const Prac = () => {
           onMouseUp={StopPainting}
           onMouseLeave={StopPainting}
         ></canvas>
+
+        <CaptureBtn onClick={onCapture} ref={linkRef}>
+          클릭해서 이미지로
+        </CaptureBtn>
         <Button onClick={() => setErase(!erase)}>
           <img className="img" src={eraser} alt="지우개" />
           <img className="img" src={eraser} alt="지우개" />
           <img className="img" src={eraser} alt="지우개" />
         </Button>
         <ColorBox>
-          <ColorBtn onClick={() => setColor("black")} />
-          <ColorBtn className="red" onClick={() => setColor("red")} />
-          <ColorBtn className="blue" onClick={() => setColor("blue")} />
-          <ColorBtn className="green" onClick={() => setColor("green")} />
+          <ColorBtn
+            onClick={() => {
+              setErase(false);
+              setColor("black");
+            }}
+          />
+          <ColorBtn
+            className="red"
+            onClick={() => {
+              setErase(false);
+              setColor("red");
+            }}
+          />
+          <ColorBtn
+            className="blue"
+            onClick={() => {
+              setErase(false);
+              setColor("blue");
+            }}
+          />
+          <ColorBtn
+            className="green"
+            onClick={() => {
+              setErase(false);
+              setColor("green");
+            }}
+          />
         </ColorBox>
       </Contatiner>
     </Wrapper>
@@ -189,13 +274,34 @@ const Contatiner = styled.div`
     width: 100%;
   }
   .canvas {
-    margin-top: 220px;
+    margin-top: 260px;
     z-index: 2;
   }
   .frame {
-    margin-top: 220px;
+    margin-top: 260px;
     position: absolute;
   }
+`;
+
+const CaptureBtn = styled.a``;
+
+const CaptureSection = styled.div`
+  position: fixed;
+
+  height: 300px;
+`;
+
+const Title = styled.div`
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #c1c0c0;
+  height: 100px;
+  position: absolute;
+  top: 80px;
+  font-size: 24px;
+  font-weight: 700;
 `;
 
 const Button = styled.div`
